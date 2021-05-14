@@ -84,7 +84,16 @@ SelectableLayerItem, FeatureItem) {
       this.own(on(this.selectDijit, 'loading', lang.hitch(this, function() {
         this.shelter.show();
       })));
-      this.own(on(this.selectDijit, 'unloading', lang.hitch(this, function() {
+      this.own(on(this.selectDijit, 'unloading', lang.hitch(this, function () {
+        //Create the selection info object for all the layers
+        var selectionInfo = {};
+        array.forEach(this.layerObjectArray, lang.hitch(this, function (layer) {
+          selectionInfo[layer.id] = this._getSelectedFeaturesOID(layer);
+        }));
+        //Broadcast the selection info data through the widget
+        this.publishData({
+          'selectionInfo': selectionInfo
+        });
         this.shelter.hide();
       })));
 
@@ -128,6 +137,17 @@ SelectableLayerItem, FeatureItem) {
         var position = html.position(event.target);
         this.showPopup(position);
       })));
+    },
+
+    _getSelectedFeaturesOID: function (layer) {
+      var selectedOID = [];
+      if (layer.hasOwnProperty('objectIdField')) {
+        //Loop through all the layers and get the object ids of layers selected features
+        array.forEach(layer.getSelectedFeatures(), lang.hitch(this, function (feature) {
+          selectedOID.push(feature.attributes[layer.objectIdField]);
+        }));
+      }
+      return selectedOID;
     },
 
     showPopup: function(position) {
